@@ -1,0 +1,54 @@
+package com.atguigu.crm.handlers;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import com.atguigu.crm.services.CustomerService;
+import com.atguigu.crm.services.CustomerServiceService;
+import com.atguigu.crm.services.DictsService;
+import com.atuigu.crm.entity.Customer;
+import com.atuigu.crm.entity.CustomerServiceEntity;
+
+@RequestMapping(value="/service")
+@Controller
+public class CustomerServiceHandler {
+	
+	@Autowired
+	private DictsService dictsService;
+	@Autowired
+	private CustomerService customerService;
+	@Autowired
+	private CustomerServiceService customerServiceService;
+	
+	@RequestMapping(value="create")
+	public String create(CustomerServiceEntity customerServiceEntity){
+		customerServiceService.saveCustomerService(customerServiceEntity);
+		return "service/deal/list";
+	}
+	
+	/**
+	 *@Description: 为创建新服务准备数据，然后跳转页面
+	 *@Author:du_minchao
+	 *@Version:
+	 *@CreateDate:29 Mar 2016
+	 *@return:String
+	 */
+	@RequestMapping(value="/toCreate")
+	public String toCreate(Map<String, Object> map){
+		
+		//1.查询数据字典获取服务类型
+		List<String> serviceType = dictsService.getAllElementsByType("服务类型");
+		//2.查询所有客户customer
+		List<Customer> customerList = customerService.getAllCustomer();
+		//3.把查询到的数据放在map隐含域中， 跳转页面显示数据
+		map.put("serviceType", serviceType);
+		map.put("customerList", customerList);
+		
+		return "service/input";
+	}
+	
+}

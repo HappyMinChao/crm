@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.crm.mappers.CustomerServiceMapper">
+	
+	<!-- 
+		descirbe:更新分配服务
+		author: du_minchao
+	 -->
+	 <update id="updateAllotTo">
+	 	update customer_services 
+	 		set allot_id = #{allotTo_id}
+	 	where id = #{id}
+	 </update>
+	
+	<!-- 
+		descirbe:差选没有分配的服务， 并分页显示
+		author: du_minchao
+	 -->
+	<resultMap type="com.atuigu.crm.entity.CustomerServiceEntity" id="PageResultMap">
+	 	<id property="id" column="csid"/>
+	 	<result property="serviceType" column="cstype"/>
+	 	<result property="serviceTitle" column="cstitle"/>
+	 	<result property="createDate" column="csdate"/>
+	 	<result property="customer.name"  column="cname"/>
+	 	<result property="createdby.name" column="uname"/>
+	 </resultMap>
+	 
+	 <select id="getPageContent" resultMap="PageResultMap">
+	 	 select csid, cstype,cstitle,csdate,uname,cname
+	      from  (select rownum rn, 
+	              cs.id csid,
+	              cs.service_type cstype,
+	              cs.service_title cstitle,
+	              cs.create_date csdate,
+	              u.id uuuuid,
+	              u.name uname,
+	              c.id cid,
+	              c.name cname
+	            from customer_services cs
+	            left outer join customers c
+	            on c.id = cs.customer_id
+	            left outer join users u
+	            on u.id = cs.created_id
+	            where cs.allot_id is null
+        	)
+	 	<![CDATA[
+	 		where rn >= #{firstIndex} and rn < #{lastIndex}
+	 	]]>
+	 	
+	 </select>
+	
+	<!--
+		describe:计算出表中共有多少条记录为分配
+		author: du_minchao
+	 -->
+	<select id="getTotalElementCount" resultType="int">
+		select count(*) from customer_services cs where cs.allot_id is null
+	</select>
+
+	<!-- 
+		descirbe:根据类型获取本类型下的元素
+		author: du_minchao
+		表中所有字段备用：
+		id, allot_date, create_date, deal_date, deal_result, 
+		satisfy, service_deal,service_request,service_state,
+		service_title,service_type,allot_id,created_id,customer_id
+		
+	 -->
+	<insert id="saveCustomerService" useGeneratedKeys="true">
+		<!-- 这个地方是不是有问题？ -->
+		<selectKey keyProperty="id" resultType="long" order="BEFORE"> 
+			select crm_seq.nextval as id from dual
+		</selectKey>
+		insert into customer_services(id,
+									  service_type,
+									  service_title,
+									  customer_id,
+									  service_state,
+									  service_request,
+									  created_id,
+									  create_date
+									  )
+								values(#{id},
+									   #{serviceType},
+									   #{serviceTitle},
+									   #{customer.id},
+									   #{serviceState},
+									   #{serviceRequest},
+									   #{createdby.id},
+									   #{createDate})
+	</insert>
+</mapper>

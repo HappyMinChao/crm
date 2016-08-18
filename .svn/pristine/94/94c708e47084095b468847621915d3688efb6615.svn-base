@@ -1,0 +1,39 @@
+package com.atguigu.crm.mappers;
+
+import java.util.List;
+import java.util.Map;
+
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
+
+import com.atuigu.crm.entity.SalesChance;
+import com.atuigu.crm.entity.User;
+
+public interface UserMapper {
+
+	//查询出 User 关联的 Role 的 name 属性
+	//使用的是 JavaBean 的级联属性. User 有一个 Role 类型的 role 属性, Role 中还有一个 name 属性.
+	//于是 role.name 就是 User 的级联属性. 
+	@Select("SELECT u.id, u.name, password, u.enabled, r.name as \"role.name\" "
+			+ "FROM users u "
+			+ "LEFT OUTER JOIN roles r "
+			+ "ON role_id = r.id "
+			+ "WHERE u.name = #{name}")
+	User getByName(@Param("name") String name);
+	
+	@Select("select * from users")
+	public abstract List<User> getAllUser();
+
+	int getTotalElements(Map<String, Object> myBatisParam);
+
+	List<User> getContent(Map<String, Object> myBatisParam);
+
+	User getBeanById(@Param("userId")Integer userId);
+
+	void delete(@Param("userId")Integer id);
+
+	void update(User user);
+
+	void create(User user);
+	
+}

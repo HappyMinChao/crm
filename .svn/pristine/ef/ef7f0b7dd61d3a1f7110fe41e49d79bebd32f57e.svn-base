@@ -1,0 +1,48 @@
+package com.atguigu.crm.services;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.atguigu.crm.mappers.CustomerServiceMapper;
+import com.atuigu.crm.entity.CustomerServiceEntity;
+import com.atuigu.crm.orm.Page;
+
+/**
+ * @Description: 客户服务类的service方法
+ * @Author:du_minchao
+ * @CreateDate:19:56:00
+ */
+
+@Service
+@Transactional
+public class CustomerServiceService {
+	
+	@Autowired
+	private CustomerServiceMapper customerServiceMapper;
+	
+	public void saveCustomerService(CustomerServiceEntity customerServiceEntity){
+		customerServiceMapper.saveCustomerService(customerServiceEntity);
+	}
+
+	public Page<CustomerServiceEntity> listWithPage(int pageNo,
+			int pageSize) {
+		
+		//获取totalElements content
+		int totalElements = customerServiceMapper.getTotalElementCount();
+		Page<CustomerServiceEntity>  page = new Page<CustomerServiceEntity>();
+		page.setPageNo(pageNo);
+		page.setPageSize(pageSize);
+		page.setTotalElements(totalElements);
+		
+		int firstIndex = (page.getPageNo()-1) * page.getPageSize();
+		int lastIndex = firstIndex + page.getPageSize();
+		//查询出page.content
+		List<CustomerServiceEntity> pageContent = customerServiceMapper.getPageContent(firstIndex, lastIndex);
+		page.setContent(pageContent);
+		return page;
+	}
+
+}

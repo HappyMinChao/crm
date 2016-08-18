@@ -1,0 +1,112 @@
+package com.atguigu.crm.handlers;
+
+import java.util.Map;
+
+import javax.servlet.http.HttpSession;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import com.atguigu.crm.services.ContactService;
+import com.atguigu.crm.services.DictsService;
+import com.atuigu.crm.entity.Contact;
+import com.atuigu.crm.entity.User;
+import com.atuigu.crm.orm.Page;
+
+/**
+ * @Description:对联系人的CRUD
+ * @Author:du_minchao
+ * @CreateDate:20:37:51
+ */
+@Controller
+@RequestMapping(value="/contact")
+public class ContactHandler {
+	
+	@Autowired
+	private ContactService contactService;
+	@Autowired
+	private DictsService dictsService;
+	
+	/**
+	 *@Description:删除联系人
+	 *@Author:du_minchao
+	 *@Version:
+	 *@CreateDate:31 Mar 2016
+	 *@return:String	
+	 * */
+	@RequestMapping(value="/delete",method=RequestMethod.DELETE)
+	public String deleteContact(HttpSession session, 
+								@RequestParam(value="id",required=false)String contactid,
+								@RequestParam(value="customerid",required=false)String customerid
+								){
+		if("".equals(customerid)){
+			customerid=null;
+		}
+		if("".equals(contactid)){
+			contactid=null;
+		}
+//		注意传的字符串不是如果为'' 这在后面拼sql的时候因为where多了而导致删除不掉
+		contactService.deleteContact(contactid,customerid);
+		return "redirect:/contact/list";
+	}
+	
+	
+	/**
+	 *@Description:更新联系人
+	 *@Author:du_minchao
+	 *@Version:
+	 *@CreateDate:31 Mar 2016
+	 *@return:String
+	 */
+	@RequestMapping(value="/create",method=RequestMethod.POST)
+	public String saveContact(HttpSession session, Contact contact){
+		if(contact.getId() != null){
+			contactService.updateContact(contact);
+		}else{
+			contactService.saveContact(contact);
+		}
+		return "redirect:/contact/list";
+	}
+	
+	@RequestMapping(value="/create",method=RequestMethod.GET)
+	public String create(Map<String, Object> map,
+						@RequestParam(value="id",required=false)Integer id){
+		if(id != null){
+			Contact contact = contactService.getContactById(id);
+			map.put("contact", contact);
+		}else{
+			map.put("contact", new Contact());
+		}
+		return "contact/input";
+	}
+	
+	/**
+	 *@Description:列出当前用户所有的联系人
+	 *@Author:du_minchao
+	 *@Version:
+	 *@CreateDate:30 Mar 2016
+	 *@return:String
+	 */
+	@RequestMapping(value="/list",method=RequestMethod.GET)
+	public String list(HttpSession session,
+						@RequestParam(value="pageNoStr",required=false)String pageNoStr,
+						Map<String, Object> map
+						){
+		int pageNo = 1; 
+		try {
+			pageNo = Integer.parseInt(pageNoStr);
+		} catch (NumberFormatException e) {}
+		
+		int pageSize = 5;
+		User user = (User) session.getAttribute("user");
+		Long userId = user.getId();
+		Page<Contact> page = contactService.getContactPage(pageNo, pageSize,userId);
+		map.put("page", page);
+		
+		return "contact/list";
+	}
+
+}

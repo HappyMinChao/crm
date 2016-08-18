@@ -1,0 +1,120 @@
+package com.atguigu.crm.handlers;
+
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.util.WebUtils;
+
+import com.atguigu.crm.services.CustomerService;
+import com.atguigu.crm.services.DictsService;
+import com.atuigu.crm.entity.Contact;
+import com.atuigu.crm.entity.Customer;
+import com.atuigu.crm.orm.Page;
+
+@RequestMapping(value="/customer")
+@Controller
+public class CustomerHandler {
+	
+	@Autowired
+	private CustomerService customerService;
+	@Autowired
+	private DictsService dictsService;
+	
+	/**
+	 *@Description: 带查询条件的用户查询， 分页显示
+	 *@Author:du_minchao
+	 *@Version:
+	 *@CreateDate:30 Mar 2016
+	 *@return:String
+	 */
+	
+	@RequestMapping(value="/list",method=RequestMethod.POST)
+	public String listWithCondition(HttpServletRequest request,
+									@RequestParam(value="pageNo",required=false)String pageNoStr,
+									Map<String, Object> map){
+		int pageNo = 1;
+		try {
+			pageNo = Integer.parseInt(pageNoStr);
+		} catch (Exception e) {}
+		//获取查询条件
+		Map<String, Object> params = WebUtils.getParametersStartingWith(request, "search_");
+	
+		int pageSize = 5;
+		Page<Customer> page = customerService.getPage(params, pageNo, pageSize);
+		
+		//获取所有的地区 、客户登记、 状态
+		List<String> regions = dictsService.getAllElementsByType("地区");
+		List<String> levels = dictsService.getAllElementsByType("客户等级");
+		map.put("regions",regions);
+		map.put("levels", levels);
+		map.put("page", page);
+		//用户modelAttribute
+		map.put("customer", new Customer());
+		
+		return "customer/list";
+	}
+	
+	/**
+	 *@Description:查询带分页，不带条件的客户
+	 *@Author:du_minchao
+	 *@Version:
+	 *@CreateDate:30 Mar 2016
+	 *@return:String
+	 */
+	@RequestMapping(value="/list",method=RequestMethod.GET)
+	public String list(@RequestParam(value="pageNoStr",required=false)int pageNo,
+						Map map){
+		//需要查询：  客户编号	 客户名称 	地区 	 	   客户经理 	        客户等级 	状态
+		//        no   name    region    manager   level
+		// select no,name,region,manager_id,customer_level
+		// from customers
+		int pageSize = 5;
+		Page<Customer> page = customerService.getPageWithoutCondition(pageNo,pageSize);
+		//获取所有的地区 、客户登记、 状态
+		List<String> regions = dictsService.getAllElementsByType("地区");
+		List<String> levels = dictsService.getAllElementsByType("客户等级");
+		map.put("regions",regions);
+		map.put("levels", levels);
+		map.put("page", page);
+		map.put("customer", new Customer());
+		
+		return "customer/list";
+	}
+	
+	@RequestMapping(value="/{customerId}",method=RequestMethod.GET)
+	public String toUpdate(@PathVariable("customerId") long customerId,Map<String,Object> map){
+		
+		Customer customer=customerService.getBeanById(customerId);
+		List<String> regions=customerService.getRegions();//获取地区信息
+		List<Contact> mangers=customerService.getManagersById(customerId);//获取客户经理
+		List<String> levels =customerService.getLevels();//客户等级
+		List<String> satisfies=customerService.getSatisfies();//满意度
+		List<String> credits=customerService.getCredits();//信用度
+		
+		//客户的基本信息
+		map.put("customer", customer);
+		map.put("regions", regions);
+		map.put("mangers", mangers);
+		map.put("levels", levels);
+		map.put("satisfies", satisfies);
+		map.put("credits", credits);
+		
+		return "customer/input";
+	}
+	
+	@RequestMapping(value="/{customerId}",method=RequestMethod.PUT)
+	public String update(@PathVariable("customerId") long customerId,Map<String,Object> map,Customer customer){
+		customerService.updateById(customer);
+		return "redirct:customer/list";
+	}
+	
+	
+}

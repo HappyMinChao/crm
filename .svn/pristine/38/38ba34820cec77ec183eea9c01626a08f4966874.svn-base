@@ -1,0 +1,20 @@
+#条件查询
+
+select * from (
+          select rownum rn,
+                c.id cid,
+                c.no cno,
+                c.name cname,
+                c.region cregion,
+                c.customer_level ccuslevel,
+                c.state cstate,
+                sc.contact sccon
+          from customers c
+              left outer join sales_chances sc
+              on c.manager_id = sc.id
+     )
+where     cname like '%恒大电脑%' 
+      and cregion like '%北京%'
+      and sccon like '%陈雷%' 
+      and ccuslevel like '%战略合作伙伴%'
+      and cstate like '%删除%'

@@ -1,0 +1,194 @@
+package com.atguigu.crm.handlers;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.authc.AuthenticationException;
+import org.apache.shiro.authc.UsernamePasswordToken;
+import org.apache.shiro.subject.PrincipalCollection;
+import org.apache.shiro.subject.Subject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.support.ResourceBundleMessageSource;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.util.WebUtils;
+
+import com.atguigu.crm.services.RoleService;
+import com.atguigu.crm.services.UserService;
+import com.atguigu.crm.utils.PageUtils;
+import com.atuigu.crm.entity.Role;
+import com.atuigu.crm.entity.User;
+import com.atuigu.crm.orm.Page;
+
+@RequestMapping("/user")
+@Controller
+public class UserHandler {
+
+	@Autowired
+	private UserService userService;
+	@Autowired
+	private RoleService roleService;
+	
+	@Autowired
+	private ResourceBundleMessageSource messageSource;
+	
+	/**
+	 * 1. 在表单提交的情况下, 响应结果尽可能使用重定向技术. 因为可以避免表单的重复提交. 
+	 * 2. 在使用重定向之后, request 中加入的 key-value 在页面上无法得到. 因为是两个请求. 
+	 * 3. 在 SpringMVC 中可以有办法解决这个问题. 即在重定向时, 页面上也可以得到在 handler 中加入的 key-value
+	 * 1). 在方法中使用 RedirectAttributes 类型的参数
+	 * 2). 调用 RedirectAttributes 的 addFlashAttribute 方法加入 key-value
+	 * 3). 响应的结果需要使用 SpringMVC 映射一下, 而不能直接重定向会目标页面. 
+	 * YES: 
+	 * return "redirect:/index";
+	 * <mvc:view-controller path="/index" view-name="index"/>
+	 * NO: return "redirect:/index.jsp";
+	 * 
+	 * 4. 错误消息可以放入到国际化资源文件中.
+	 * 1). 在 SpringMVC 的配置文件中配置国际化资源文件. 即配置 org.springframework.context.support.ResourceBundleMessageSource bean
+	 * 2). 在国际化资源文件中加入 key-value
+	 * 3). 把 ResourceBundleMessageSource bean 注入到 Handler 中.
+	 * 4). 调用 getMessage(String code, Object[] args, Locale locale) 方法获取国际化资源文件中的 value 值.
+	 * code: 国际化资源文件中的 key
+	 * args: 国际化资源文件中的占位符
+	 * locale: Locale 对象. 可以直接在 handler 方法中加入该类型的参数
+	 * 
+	 * 5. 在 Handler 方法中使用 HttpSession 对象. 建议使用原生的 HttpSession 对象. 
+	 */
+	
+	/**
+	 *@Description: 重写登录方法，实现权限的验证
+	 *@Author:du_minchao
+	 *@Version:
+	 *@CreateDate:4 Apr 2016
+	 *@return:String
+	 */
+	@RequestMapping(value="/login",method=RequestMethod.POST)
+	public String login(@RequestParam(value="username", required=false) String username, 
+			@RequestParam(value="password",required=false) String password,
+			RedirectAttributes attributes, Locale locale, HttpSession session){
+		
+		//获取当前的Subject,正与系统进行交互客户。所有 Subject实例都必须被绑定到一个SecurityManager上
+		Subject currentUser = SecurityUtils.getSubject();
+		
+		//验证当前用户是否被认证， 即是否登录
+		if(!currentUser.isAuthenticated()){
+			//把用户名和密码封装为一个UsernamePasswordToken对象
+			UsernamePasswordToken token = new UsernamePasswordToken(username,password);
+			token.setRememberMe(true);
+			
+			try {
+				//执行登录操作 , 会执行 MyRealms.doGetAuthenticationInfo方法
+				//把用户名和密码出入到doGetAuthenticationInfo方法中进行登录验证
+				currentUser.login(token);
+				
+				//如果登录成功， 把User放入到session中， 但是，我们怎么知道是否登录成功呢， 因为登录操作在doGetAuthenticationInfo方法中操作的
+				//这个地方我们用到了一个类Principal(adj. 主要的；资本的  n. 首长；校长；资本；当事人),即当前登录成功的用户
+				PrincipalCollection principals = SecurityUtils.getSubject().getPrincipals();
+				User user = (User)principals.getPrimaryPrincipal();
+				session.setAttribute("user", user);
+				
+				return "success";
+			} catch (AuthenticationException e) {
+				attributes.addFlashAttribute("message", 
+						messageSource.getMessage("error.user.login", null, locale));
+			}
+			
+		}
+		
+		return "redirect:/index";
+	}
+	
+	//--------------------------------start-------to shanshan------------------------------用户的crud
+	@RequestMapping(value="/list",method=RequestMethod.GET)
+	public String list(String pageNoStr,
+					   Map<String,Object> map,
+					   HttpServletRequest request){
+		//获取查询条件的请求参数对应的 Map
+		Map<String, Object> params = WebUtils.getParametersStartingWith(request, "search_");
+		
+		//保证在分页时可以携带查询条件. 
+		//1.查询条件的 params 转为查询的字符串
+		String queryString = PageUtils.encodeParamsToQueryString(params);
+		//2.查询条件的字符串放入到 request 中
+		map.put("queryString", queryString);
+		
+		Page<User> page=userService.getPage(pageNoStr,params);
+		map.put("page", page);
+		
+		return "user/list";
+	}
+	
+	@RequestMapping(value="/",method=RequestMethod.POST)
+	public String create(User user){
+		userService.create(user);
+		return "redirect:list";
+	}
+	
+	@RequestMapping(value="/",method=RequestMethod.PUT)
+	public String update(User user){
+		userService.update(user);
+		return "redirect:list";
+	}
+	
+	@RequestMapping(value="/{id}",method=RequestMethod.DELETE)
+	public String delete(@PathVariable("id") Integer id){
+		userService.delete(id);
+		return "redirect:list";
+	}
+	
+	@RequestMapping(value="/input",method=RequestMethod.GET)
+	public String toInput(Integer userId,Map<String,Object> map){
+		User user=null;
+		if(userId==null) {
+			user=new User();
+		}else{
+			user=userService.getBeanById(userId);
+		}
+		
+		List<Role> roles = roleService.getAllRoles();
+		
+		Map<String,String> allStatus=getAllStatus();
+		
+		map.put("roles", roles);
+		map.put("allStatus", allStatus);
+		map.put("user", user);
+		return "user/input";
+	}
+	
+	private Map<String, String> getAllStatus() {//----------辅助
+		Map<String,String> allStatus=new HashMap<String,String>();
+		allStatus.put("1", "有效");
+		allStatus.put("0", "无效");
+		return allStatus;
+	}
+
+	//--------------------------------end----------to shanshan---------------------------用户的crud
+	
+	/*@RequestMapping(value="/login",method=RequestMethod.POST)
+	public String login(@RequestParam(value="username", required=false) String username, 
+			@RequestParam(value="password",required=false) String password,
+			RedirectAttributes attributes, Locale locale, HttpSession session){
+		User user = userService.login(username, password);
+		if(user != null){
+			//把用户信息保存到 HttpSession 中.
+			session.setAttribute("user", user);
+			return "success";
+		}
+		
+		//登陆失败. 
+		attributes.addFlashAttribute("message", messageSource.getMessage("error.user.login", null, locale));
+		return "redirect:/index";
+	}*/
+	
+}

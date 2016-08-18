@@ -1,0 +1,21 @@
+package com.atguigu.crm.mappers;
+
+import java.util.List;
+
+import org.apache.ibatis.annotations.Param;
+import org.springframework.stereotype.Component;
+
+import com.atuigu.crm.entity.CustomerServiceEntity;
+
+public interface CustomerServiceMapper {
+
+	public abstract void saveCustomerService(CustomerServiceEntity customerServiceEntity);
+
+	public abstract int getTotalElementCount();
+
+	public abstract List<CustomerServiceEntity> getPageContent(@Param("firstIndex")int firstIndex, @Param("lastIndex")int lastIndex);
+
+	public abstract void updateAllotTo(@Param("id") Integer id,
+									   @Param("allotTo_id")Long allotTo_id);
+
+}

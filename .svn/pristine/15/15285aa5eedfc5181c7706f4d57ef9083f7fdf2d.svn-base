@@ -1,0 +1,28 @@
+package com.atguigu.crm.services;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.atguigu.crm.mappers.DictsMapper;
+
+@Service
+@Transactional
+public class DictsService {
+	
+	@Autowired
+	private DictsMapper dictsMapper;
+	
+	/**
+	 *@Description:根据类型，获取本类型下的所有的元素
+	 *@Author:du_minchao
+	 *@Version:
+	 *@CreateDate:29 Mar 2016
+	 *@return:List<String>
+	 */
+	public List<String> getAllElementsByType(String type){
+		return dictsMapper.getAllElementsByType(type);
+	}
+}

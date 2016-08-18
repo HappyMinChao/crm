@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.crm.mappers.SalesChanceMapper">
+	
+	<sql id="queryCondition">
+		<where>
+			<if test="custName != null">
+				cust_name LIKE #{custName}
+			</if>
+			<if test="title != null">
+				AND title LIKE #{title}
+			</if>
+			<if test="contact != null">
+				AND contact LIKE #{contact}
+			</if>
+		</where>
+	</sql>
+	
+	<!-- 
+		author: du_minchao
+		date: 2016年3月29日10:08:36
+		select id, contact, contact_tel, create_date, cust_name, 
+			description ,designee_date , rate, source , status ,
+			 title, created_user_id designee_id
+			from sales_chances
+	 -->
+	<resultMap type="com.atuigu.crm.entity.SalesChance" id="SalesChanceResultMap">
+		<id property="id" column="id"/>
+		<result property="source" column="source"/>
+		<result property="contact" column="contact"/>
+		<result property="contactTel" column="contact_tel"/>
+		<result property="createDate" column="create_date"/>
+		<result property="custName" column="cust_name"/>
+		<result property="description" column="description"/>
+		<result property="designeeDate" column="designee_date"/>
+		<result property="rate" column="rate"/>
+		<result property="status" column="status"/>
+		<result property="title" column="title"/>
+		<!-- 需要特处理 -->
+		<result property="contact" column="designee_id"/>
+		
+		<!-- 
+			需要处理 
+			<result property="contact" column="created_user_id"/>
+		-->
+		<association property="createBy" javaType="com.atuigu.crm.entity.User">
+		  <id property="id" column="id"/>
+		  <result property="name" column="name"/>
+		 </association>
+	</resultMap>
+	<select id="getElementById" resultMap="SalesChanceResultMap">
+		select *
+		from sales_chances s left outer join users u on s.created_user_id = u.id 
+		where s.id=#{id}
+	</select>
+	
+	<select id="getContent2" resultType="com.atuigu.crm.entity.SalesChance">
+		SELECT * FROM 
+			(SELECT rownum rn, id, cust_name, title, contact, contact_tel, create_date 
+		     FROM sales_chances 
+		     <include refid="queryCondition"/>
+			 ORDER BY id)
+		<![CDATA[
+		WHERE rn >= #{firstIndex} AND rn < #{endIndex}
+		]]>	 
+	</select>
+	
+	<select id="getTotalElements2" resultType="long">
+		SELECT count(id) 
+		FROM sales_chances
+		<include refid="queryCondition"/>
+	</select>
+	
+	<update id="developSuccess" parameterType="com.atuigu.crm.entity.SalesChance">
+		UPDATE sales_chances
+		 SET status=3 where id=#{id}
+	</update>
+	<update id="developFail" parameterType="com.atuigu.crm.entity.SalesChance">
+		UPDATE sales_chances
+		 SET status=4 where id=#{id}
+	</update>
+	
+</mapper>

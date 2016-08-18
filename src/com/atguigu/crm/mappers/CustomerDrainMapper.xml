@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.crm.mappers.CustomerDrainMapper">
+	<!-- reason status -->
+	<update id="updateDelay">
+		update customer_drains 
+			<set>
+				<if test="delay != null and delay != ''">
+					delay=#{delay},
+				</if>
+				<if test="status != null and status != ''">
+					status=#{status},
+				</if>
+				<if test="reason != null and reason != ''">
+					reason=#{reason},
+				</if>
+			</set>
+		where id=#{id}
+	</update>
+	
+	<select id="getElementById" resultMap="CustomerDrainMap">
+	    select  cd.id,
+	            cd.delay, 
+	            cd.drain_date,
+	            cd.last_order_date,
+	            cd.reason,
+	            cd.status,
+	            cd.customer_id,
+	            c.name cname,
+           		con.name conName
+	    from customer_drains cd
+	    left outer join customers c
+	    on c.id = cd.customer_id
+	    left outer join contacts con
+	    on c.manager_id = con.id
+	    where cd.id = #{id}
+	</select>
+	
+	<!-- 
+		cd.id,
+		cd.delay, 
+		cd.drain_date,
+		cd.last_order_date,
+		cd.reason,
+		cd.status,
+		cd.customer_id,
+		managerName=%doi%, customer.name=%阿%, customer.manager.name=%doi%
+	 -->
+	<!-- where 条件查询语句 -->
+	<sql id="whereSql">
+		<where>
+			<if test="managerName != null and managerName !=''">
+				and con.name like #{managerName}
+			</if>
+			<if test="customerName != null and customerName != ''">
+				and c.name like #{customerName}
+			</if>
+		</where>
+	</sql>
+	
+	
+	<select id="getTotalNumCondition" resultType="int">
+		 
+		    select  count(*)
+		    from customer_drains cd
+		    left outer join customers c
+		    on c.id = cd.customer_id
+		    left outer join contacts con
+		    on c.manager_id = con.id
+		    <include refid="whereSql"/>
+	</select>
+	
+	<resultMap type="com.atuigu.crm.entity.CustomerDrain" id="CustomerDrainMap">
+		<id property="id" column="id"/>
+		<result property="delay" column="delay"/>
+		<result property="drainDate" column="drain_date"/>
+		<result property="lastOrderDate" column="last_order_date"/>
+		<result property="reason" column="reason"/>
+		<result property="status" column="status"/>
+		<association property="customer" javaType="com.atuigu.crm.entity.Customer">
+			<result property="name" column="cname"/>
+			<association property="manager" javaType="com.atuigu.crm.entity.Contact">
+				<result property="name" column="conName"/>
+			</association>
+		</association>
+	</resultMap>
+	
+	<select id="getContentCondition" resultMap="CustomerDrainMap">
+	
+		select * from (
+		    select  rownum rn,
+		            cd.id,
+		            cd.delay, 
+		            cd.drain_date,
+		            cd.last_order_date,
+		            cd.reason,
+		            cd.status,
+		            cd.customer_id,
+		            c.name cname,
+            		con.name conName
+		    from customer_drains cd
+		    left outer join customers c
+		    on c.id = cd.customer_id
+		    left outer join contacts con
+		    on c.manager_id = con.id
+		    <include refid="whereSql"/>
+		)
+		<![CDATA[
+			where rn >=${firstIndex} and rn < ${lastIndex}
+		]]>
+	</select> 
+	
+</mapper>

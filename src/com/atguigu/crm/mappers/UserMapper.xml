@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.crm.mappers.UserMapper">
+	
+	<resultMap type="com.atuigu.crm.entity.User" id="UserMap">
+		<id property="id" column="id"/>
+		<result property="name" column="name"/>
+		<result property="password" column="password"/>
+		<result property="enabled" column="enabled"/>
+		<result property="salt" column="salt"/>
+		<association property="role" javaType="com.atuigu.crm.entity.Role"> 
+			<result property="name" column="roleName"/>
+
+			<collection property="authorities"
+						javaType="java.util.List"
+						ofType="com.atuigu.crm.entity.Authority">
+				<result property="name" column="authorityName"/>
+			</collection>
+			
+		</association>
+	</resultMap>
+
+	<select id="getByName" resultMap="UserMap">
+		select  u.id, 
+				u.name, 
+				u.password, 
+				u.enabled, 
+				u.salt, 
+				r.name as "roleName", 
+				a.name as "authorityName" 
+		from users u
+			left outer join roles r
+			on u.role_id = r.id
+			left outer join role_authority ra 
+			on r.id = ra.role_id
+			left outer join authorities a
+			<!-- 注意： 通过上面的左外连接authority_id为一个集合， 但是同样可以这样写！ -->
+			on ra.authority_id = a.id
+	</select>
+
+	<sql id="questCondition">
+		<where>
+			<if test="name != null">
+				name like #{name}
+			</if>
+			<if test="enabled != null">
+				AND enabled=#{enabled}
+			</if>
+		</where>
+	</sql>
+
+	<!-- 
+		descirbe:用户的分页查询的元素
+		author: shanshan 
+	 -->
+	<select id="getContent" resultType="com.atuigu.crm.entity.User">
+		select * from (
+				       select 
+					       rownum rn,
+					       s.id,
+					       s.enabled,
+					       s.name,
+					       s.password,
+					       s.role_id "role.id",
+					       s.salt  
+				       from users s
+				       <include refid="questCondition"/>
+				       order by id
+					   )
+		<![CDATA[
+		where rn<#{endIndex} and rn>=#{firstIndex}
+		]]>
+	</select>
+	
+	<!-- 
+		descirbe:用户的分页查询总个数
+		author: shanshan 
+	 -->
+	<select id="getTotalElements" resultType="int">
+	   select count(*)  
+       from users 
+       <include refid="questCondition"/>
+	</select>
+	
+	<!-- 
+		descirbe:根据用户id查用户对象
+		author: shanshan 
+	 -->
+	<select id="getBeanById" resultType="com.atuigu.crm.entity.User">
+		select * from users where id=#{userId}
+	</select>
+	
+	<!-- 
+		descirbe:根据用户id删除用户
+		author: shanshan 
+	 -->
+	<delete id="delete">
+		delete from users where id=#{userId}
+	</delete>
+	
+	<!-- 
+		descirbe:根据用户id更新对象（salt 后期加上）
+		author: shanshan 
+	 -->
+	<update id="update">
+		update users 
+			set 
+				enabled=#{enabled},
+				name=#{name},
+				password=#{password},
+				role_id=#{role.id}
+		where id=#{id}
+	</update>
+	
+	<!-- 
+		descirbe:插入一个新的用户（salt 后期加上）
+		author: shanshan 
+	 -->
+	<insert id="create">
+		insert  into users(
+						  id,
+						  enabled,
+						  name,
+						  password,
+						  role_id
+						  ) 
+				values	  (
+						  crm_seq.nextval,
+						  #{enabled},
+						  #{name},
+						  #{password},
+						  #{role.id}
+						  )
+	</insert>
+</mapper>

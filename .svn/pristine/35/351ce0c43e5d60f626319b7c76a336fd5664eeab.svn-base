@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.crm.mappers.CustomerServiceMapper">
+	<!-- 
+		descirbe:根据类型获取本类型下的元素
+		author: du_minchao
+		表中所有字段备用：
+		id, allot_date, create_date, deal_date, deal_result, 
+		satisfy, service_deal,service_request,service_state,
+		service_title,service_type,allot_id,created_id,customer_id
+		
+	 -->
+	<insert id="saveCustomerService" >
+		<!-- 这个地方是不是有问题？ -->
+		<selectKey keyProperty="id" resultType="int" order="BEFORE"> 
+			select crm_seq.nextval as id from dual
+		</selectKey>
+		insert into customer_services(id,
+									service_type,
+									service_title,
+									customer_id,
+									service_state,
+									service_request,
+									created_id,
+									create_date)
+		values(#{id},#{serviceType},#{serviceTitle},
+				#{customer.id},#{serviceState},#{serviceRequest}
+				,#{createdby.id},#{createDate})
+	</insert>
+</mapper>

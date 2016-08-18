@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.crm.mappers.ContactMapper">
+	<insert id="add" parameterType="com.atuigu.crm.entity.Contact">
+		<selectKey resultType="long" order="BEFORE" keyProperty="id">
+			select crm_seq.nextval as id from dual
+		</selectKey>
+		insert into contacts(id,name,tel,customer_id)
+		values(#{id},#{name},#{tel},#{customer.id})
+	</insert>
+</mapper>

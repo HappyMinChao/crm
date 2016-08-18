@@ -1,0 +1,36 @@
+package com.atguigu.crm.services;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.atguigu.crm.mappers.UserMapper;
+import com.atuigu.crm.entity.User;
+
+@Service
+public class UserService {
+
+	@Autowired
+	private UserMapper userMapper;
+	
+	@Transactional(readOnly=true)
+	public User login(String name, String password){
+		User user = userMapper.getByName(name);
+		
+		//直接比较密码. 但实际开发中没有这么比较的!
+		if(user != null 
+				&& user.getEnabled() == 1
+				&& user.getPassword().equals(password)){
+			return user;
+		}
+		
+		return null;
+	}
+
+	public List<User> getAllUser() {
+		
+		return userMapper.getAllUser();
+	}
+}

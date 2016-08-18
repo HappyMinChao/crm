@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.crm.mappers.CustomerMapper">
+	<insert id="add" parameterType="com.atuigu.crm.entity.Customer">
+		<selectKey resultType="long" order="BEFORE" keyProperty="id">
+			select crm_seq.nextval as id from dual
+		</selectKey>
+		insert into customers(id,name,no,state)
+		values(#{id},#{name},#{no},#{state})
+	</insert>
+	
+	<!-- 
+		describe: 获取所有客户
+		author: du_minchao
+	 -->
+	<select id="getAllCustomer" resultType="com.atuigu.crm.entity.Customer">
+		select * from customers
+	</select>
+</mapper>

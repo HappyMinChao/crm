@@ -1,0 +1,26 @@
+package com.atguigu.crm.services;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.atguigu.crm.mappers.CustomerMapper;
+import com.atuigu.crm.entity.Customer;
+
+
+@Service
+@Transactional
+public class CustomerService {
+		@Autowired
+		private CustomerMapper customerMapper;
+		
+		public void save(Customer customer){
+			customerMapper.add(customer);
+		}
+		
+		public List<Customer> getAllCustomer(){
+			return customerMapper.getAllCustomer();
+		}
+}

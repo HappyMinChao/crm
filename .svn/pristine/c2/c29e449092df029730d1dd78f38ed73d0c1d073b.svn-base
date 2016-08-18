@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.crm.mappers.CustomerMapper">
+	
+	<!-- where     c.name like '%恒大电脑%' 
+      and c.region like '%北京%'
+      and sc.contact like '%陈雷%' 
+      and c.customer_level like '%战略合作伙伴%'
+      and c.state like '%删除%' -->
+	<!-- {region=北京, level=战略合作伙伴, manager.name=%陈雷%, name=%恒大电脑%, state=删除} -->
+	<sql id="queryCondition">
+		<where>
+			<if test="name != null">
+				AND cname LIKE #{name}
+			</if>
+			<if test="region != null">
+				AND cregion LIKE #{region}
+			</if>
+			<if test="level != null">
+				AND ccuslevel LIKE #{level}
+			</if>
+			<if test="state != null">
+				AND cstate LIKE #{state}
+			</if>
+			<!-- <if test="${empty manager.name}"> 
+			<if test="manager.name != null">
+				AND sc.contact LIKE #{manager.name}
+			</if>-->
+		</where>
+	</sql>
+	
+	<!-- 
+		describe: 获取查询条件总的elements数量
+		author: du_minchao
+	 -->
+	
+	<select id="getTotalNumCondition" resultType="int">
+		select count(*) from (
+			select rownum rn,
+							c.id cid,
+	        				c.no cno,
+	        				c.name cname,
+	        				c.region cregion,
+	        				c.customer_level ccuslevel,
+	        				c.state cstate,
+	        				sc.contact sccon
+					from customers c
+	        		left outer join sales_chances sc
+	        		on c.manager_id = sc.id
+        )
+		<include refid="queryCondition"/>
+	</select>
+	
+	<!-- 
+		describe: 获取page内容
+		author: du_minchao
+	 -->
+	
+	<select id="getContentCondition" resultMap="pageResultMap">
+		select cid,cno, cname, cregion, ccuslevel, cstate, sccon
+		from (
+			select rownum rn,
+							c.id cid,
+	        				c.no cno,
+	        				c.name cname,
+	        				c.region cregion,
+	        				c.customer_level ccuslevel,
+	        				c.state cstate,
+	        				sc.contact sccon
+					from customers c
+	        		left outer join sales_chances sc
+	        		on c.manager_id = sc.id
+        )
+		<include refid="queryCondition"/>
+	</select>
+	
+	<!-- 
+		describe:不带查询条件的分页查询数据
+		author: du_minchao
+	 -->
+	 <resultMap type="com.atuigu.crm.entity.Customer" id="pageResultMap">
+	 	<id property="id" column="cid"/>
+	 	<result property="no" column="cno"/>
+	 	<result property="name" column="cname"/>
+	 	<result property="region" column="cregion"/>
+	 	<result property="manager.name" column="sccon"/>
+	 	<result property="level" column="ccuslevel"/>
+	 	<result property="state" column="cstate"/>
+	 </resultMap>
+	<select id="getPageWithoutCondition" resultMap="pageResultMap">
+		select cid, cno,cname,cregion,sccon,ccuslevel,cstate
+		from (
+				select rownum rn,
+						c.id cid,
+        				c.no cno,
+        				c.name cname,
+        				c.region cregion,
+        				c.customer_level ccuslevel,
+        				c.state cstate,
+        				sc.contact sccon
+				from customers c
+        		left outer join sales_chances sc
+        		on c.manager_id = sc.id
+			 )
+		<![CDATA[
+		where rn >=#{firstIndex} and rn<#{lastIndex}
+		]]>
+	</select>
+	<!-- 
+		describe:查询数据库中所有的customer的数量
+		author: du_minchao
+	 -->
+	<select id="getAllCustomerNum" resultType="int">
+		select count(*) from customers
+	</select>
+	
+	<!-- 
+		describe: 获取所有客户
+		author: du_minchao
+	 -->
+	<select id="getAllCustomer" resultType="com.atuigu.crm.entity.Customer">
+		select * from customers
+	</select>
+	
+	<!-- 
+		describe：查询用于回显编辑页面
+		author：shanshan
+	 -->
+	 <select id="getBeanById" resultType="com.atuigu.crm.entity.Customer">
+	 	select * from customers where id=#{customerId}
+	 </select>
+	 
+	 <!-- 
+		describe：用于更新编辑
+		author：shanshan
+	 -->
+	 <update id="updateById">
+	 	update customers 
+	 	set address=#{address} ,bank=#{bank},bank_account=#{bankAccount},bankroll=#{bankroll},
+		chief=#{chief},credit=#{credit},fax=#{fax},licence_no=#{licenceNo},local_tax_no=#{localTaxNo},
+		name=#{name},national_tax_no=#{nationalTaxNo},no=#{no},region=#{region},satify=#{satify},
+		state=#{state},tel=#{tel},turnover=#{turnover},websit=#{websit},zip=#{zip},manager_id=#{manager.id},
+		customer_level=#{level}
+		where id=#{id}
+	 </update>
+	 
+	 <!-- 客户经理来自于当前客户的联系人列表。 -->
+	 <select id="getManagersById" resultType="com.atuigu.crm.entity.Contact">
+	 	select name from contacts where customer_id=#{customerId}
+	 </select>
+	 
+	 <select id="getRegions" resultType="string">
+	 	select item from dicts where type='地区'
+	 </select>
+	 <select id="getLevels" resultType="string">
+	 	select item from dicts where type='客户等级'
+	 </select>
+	 <select id="getSatisfies" resultType="string">
+	 	select item from dicts where type='满意度'
+	 </select>
+	  <select id="getCredits" resultType="string">
+	  	select item from dicts where type='信用度'
+	  </select>
+	
+	<insert id="add" parameterType="com.atuigu.crm.entity.Customer">
+		<selectKey resultType="long" order="BEFORE" keyProperty="id">
+			select crm_seq.nextval as id from dual
+		</selectKey>
+		insert into customers(id,name,no,state)
+		values(#{id},#{name},#{no},#{state})
+	</insert>
+	
+	<update id="setDeleteStatus" parameterType="com.atuigu.crm.entity.Customer">
+		UPDATE Customers set state='删除' where id=#{id}
+	</update>
+	
+</mapper>

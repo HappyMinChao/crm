@@ -1,0 +1,40 @@
+package com.atguigu.crm.handlers;
+
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+
+import com.atguigu.crm.services.ContactService;
+
+/**
+ * @Description:对联系人的CRUD
+ * @Author:du_minchao
+ * @CreateDate:20:37:51
+ */
+@Controller
+@RequestMapping(value="/contact")
+public class ContactHandler {
+	
+	@Autowired
+	private ContactService contactService;
+	
+	/**
+	 *@Description:列出当前用户所有的联系人
+	 *@Author:du_minchao
+	 *@Version:
+	 *@CreateDate:30 Mar 2016
+	 *@return:String
+	 */
+	@RequestMapping(value="/list/{id}",method=RequestMethod.GET)
+	public String list(@PathVariable("id")Integer id,
+						Map<String, Object> map
+						){
+		
+		return "";
+	}
+
+}

@@ -1,0 +1,53 @@
+package com.atguigu.crm.mappers;
+
+import java.util.List;
+import java.util.Map;
+
+import org.apache.ibatis.annotations.Param;
+import org.springframework.stereotype.Component;
+
+import com.atuigu.crm.entity.CustomerServiceEntity;
+
+/**
+ * @Description: 服务管理模块
+ * @Author:du_minchao
+ * @CreateDate:14:12:52
+ */
+
+public interface CustomerServiceMapper {
+	/**
+	 *@Description: 保存客户服务管理
+	 *@Author:du_minchao
+	 *@Version:
+	 *@CreateDate:1 Apr 2016
+	 *@return:void
+	 */
+	public abstract void saveCustomerService(CustomerServiceEntity customerServiceEntity);
+	
+	/**
+	 *@Description:
+	 *@Author:du_minchao
+	 *@Version:
+	 *@CreateDate:1 Apr 2016
+	 *@return:int
+	 */
+	public abstract int getTotalElementCount(
+			//@Param("map")Map<String , Object> map
+			);
+
+	public abstract List<CustomerServiceEntity> getPageContent(
+								//@Param("map")Map<String , Object> map,
+								@Param("firstIndex")int firstIndex,
+								@Param("lastIndex")int lastIndex);
+
+	public abstract void updateAllotTo(@Param("id") Integer id,
+									   @Param("allotTo_id")Long allotTo_id);
+
+	
+	public abstract int getTotalElementsWithCondition(
+			Map<String, Object> mybatisParams);
+
+	public abstract List<CustomerServiceEntity> getContentWithCondition(
+			Map<String, Object> mybatisParams);
+
+}

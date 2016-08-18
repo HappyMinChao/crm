@@ -1,0 +1,16 @@
+package com.atguigu.crm.mappers;
+
+import java.util.List;
+import java.util.Map;
+
+import com.atuigu.crm.entity.SalesChance;
+
+public interface PlanMapper {
+
+	int getTotalElements(Map<String, Object> myBatisParam);
+
+	List<SalesChance> getContent(Map<String, Object> params);
+
+	SalesChance getBeanById(Integer id);
+	
+}

@@ -1,0 +1,127 @@
+package com.atguigu.crm.services;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.atguigu.crm.mappers.CustomerMapper;
+import com.atuigu.crm.entity.Contact;
+import com.atuigu.crm.entity.Customer;
+import com.atuigu.crm.orm.Page;
+import com.atuigu.crm.orm.PropertyFilter;
+
+
+@Service
+@Transactional
+public class CustomerService {
+		@Autowired
+		private CustomerMapper customerMapper;
+		
+		public void save(Customer customer){
+			customerMapper.add(customer);
+		}
+		
+		/**
+		 *@Description:获取所有客户，用于客户下拉列选中所有客户的显示
+		 *@Author:du_minchao
+		 *@Version:
+		 *@CreateDate:30 Mar 2016
+		 *@return:List<Customer>
+		 */
+		public List<Customer> getAllCustomer(){
+			return customerMapper.getAllCustomer();
+		}
+		
+		/**
+		 *@Description:在页面中显示一页的客户数据
+		 *@Author:du_minchao
+		 *@Version:
+		 *@CreateDate:30 Mar 2016
+		 *@return:Page<Customer>
+		 */
+		public Page<Customer> getPageWithoutCondition(Integer pageNo,Integer pageSize) {
+			//查询customer总数
+			int totalElements = customerMapper.getAllCustomerNum();
+			//构建page类
+			Page<Customer> page = new Page<Customer>();
+			
+			page.setPageNo(pageNo);
+			page.setPageSize(pageSize);
+			page.setTotalElements(totalElements);
+			
+			int firstIndex = (page.getPageNo() - 1) * page.getPageSize();
+			int lastIndex = firstIndex + page.getPageSize();
+			//设置page.content
+			List<Customer> content = customerMapper.getPageWithoutCondition(firstIndex, lastIndex);
+			page.setContent(content);
+			//返回page
+			return page;
+		}
+
+		/**
+		 *@Description:
+		 *@Author:du_minchao
+		 *@Version:
+		 *@CreateDate:30 Mar 2016
+		 *@return:Page<Customer>
+		 */
+		
+		public Page<Customer> getPage(Map<String, Object> params, int pageNo,
+				int pageSize) {
+			Page<Customer> page = new Page<>();
+			page.setPageNo(pageNo);
+			
+			//1. 把请求参数转为 mybatis 可以使用的请求参数
+			Map<String , Object> mybatisParams = PropertyFilter.parseRequestParams2MybatisParams(params);
+			
+			//2. 查询 totalElements
+			int totalElements = (int) customerMapper.getTotalNumCondition(mybatisParams);
+			page.setTotalElements(totalElements);
+			
+			//3. 确定查询 content 需要的 firstIndex 和 endIndex
+			int firstIndex = (page.getPageNo() - 1) * page.getPageSize() + 1;
+			int endIndex = firstIndex + page.getPageSize();
+			
+			//4. 把 firstIndex 和 endIndex 加入到 mybatisParams 中
+			mybatisParams.put("firstIndex", firstIndex);
+			mybatisParams.put("endIndex", endIndex);
+			
+			//5. 调方法查询 content
+			List<Customer> content = customerMapper.getContentCondition(mybatisParams);
+			page.setContent(content);
+			
+			return page;
+		}
+		
+		public Customer getBeanById(long customerId) {
+			return customerMapper.getBeanById(customerId);
+		}
+
+		public void updateById(Customer customer) {
+			customerMapper.updateById(customer);
+		}
+
+		public List<String> getRegions() {
+			return customerMapper.getRegions();
+		}
+
+		public List<Contact> getManagersById(long customerId) {
+			return customerMapper.getManagersById(customerId);
+		}
+
+		public List<String> getLevels() {
+			return customerMapper.getLevels();
+		}
+
+		public List<String> getSatisfies() {
+			return customerMapper.getSatisfies();
+		}
+
+		public List<String> getCredits() {
+			return customerMapper.getCredits();
+		}
+
+}

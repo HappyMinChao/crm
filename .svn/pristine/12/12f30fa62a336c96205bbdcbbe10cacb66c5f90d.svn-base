@@ -1,0 +1,11 @@
+package com.atguigu.crm.mappers;
+
+import java.util.List;
+
+public interface DictsMapper {
+
+	public List<String> getAllElementsByType(String type);
+
+	
+	
+}

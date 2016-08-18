@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.crm.mappers.ContactMapper">
+	
+	<!-- 
+		describe: 根据联系人id和customerid删除联系人
+		author: du_minchao
+	 -->
+	<delete id="deleteContact" >
+		delete from contacts 
+		<where>
+			<if test="contactid != null">and id=#{contactid}</if>
+			<if test="customerid != null">and customer_id=#{contactid}</if>
+		</where>
+	</delete>
+	
+	<!-- 
+		describe: 更新联系人
+		author: du_minchao
+	 -->
+	<update id="update">
+		update contacts
+			<set>
+				<if test="customer.id != null">customer_id=#{customer.id},</if>
+				name=#{name},
+				sex=#{sex},
+				position=#{position},
+				tel=#{tel},
+				mobile=#{mobile},
+				memo=#{memo}
+			</set>
+		where id=#{id}
+	</update>
+	
+	<!-- 
+		describe: 根据id获取联系人
+		author: du_minchao
+	 -->
+	 <select id="getContactById" resultType="com.atuigu.crm.entity.Contact">
+	 	select * from contacts where id = #{id}
+	 </select>
+	
+	
+	<!-- 
+		describe: 保存联系人信息
+		author: du_minchao
+	 -->
+	<insert id="add" parameterType="com.atuigu.crm.entity.Contact">
+		<selectKey resultType="long" order="BEFORE" keyProperty="id">
+			select crm_seq.nextval as id from dual
+		</selectKey>
+		insert into contacts(
+			id
+			<if test="name != null">,name</if>
+			<if test="sex != null">,sex</if>
+			<if test="position != null">,position</if>
+			<if test="tel != null">,tel</if>
+			<if test="customer.id != null">,customer_id</if>
+			<if test="mobile != null">,mobile</if>
+			<if test="memo">,memo</if>
+		)
+		values(#{id}
+		<if test="name != null">,#{name}</if>
+			<if test="sex != null">,#{sex}</if>
+			<if test="position != null">,#{position}</if>
+			<if test="tel != null">,#{tel}</if>
+			<if test="customer.id != null">,#{customer.id}</if>
+			<if test="mobile != null">,#{mobile}</if>
+			<if test="memo">,#{memo}</if>
+		)
+	</insert>
+	
+	<!-- 
+		describe: 根据用户名获取totalElements
+		author: du_minchao
+	 -->
+	 <select id="getTotalElementsNum" resultType="int">
+	 	select count(*) 
+	 	from contacts con 
+	 	where con.customer_id = #{userId}
+	 </select>
+	 
+	 <!-- 
+		describe: 根据用户名获取page.content
+		author: du_minchao
+	 -->
+	 <select id="getContent" resultType="com.atuigu.crm.entity.Contact">
+	 	select * 
+  		from 
+			( select rownum rn, id, memo, mobile, name, 
+					 position , sex, tel , customer_id
+			  from contacts
+         	  where customer_id=2
+			)
+		<![CDATA[
+		where rn>=#{firstIndex} and rn<#{lastIndex}  
+		]]>
+	 </select>
+	 
+</mapper>

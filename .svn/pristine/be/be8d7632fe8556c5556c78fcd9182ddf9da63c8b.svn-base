@@ -1,0 +1,59 @@
+package com.atguigu.crm.handlers;
+
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.util.WebUtils;
+
+import com.atguigu.crm.services.PlanService;
+import com.atguigu.crm.utils.PageUtils;
+import com.atuigu.crm.entity.SalesChance;
+import com.atuigu.crm.orm.Page;
+
+@Controller
+@RequestMapping("/plan")
+public class PlanHandle {
+	
+	@Autowired
+	private PlanService planservice;
+	
+	@RequestMapping(value="/list",method=RequestMethod.GET)
+	public String list(HttpServletRequest request, String pageNoStr, Map<String, Object> map){
+		//获取查询条件的请求参数对应的 Map
+		Map<String, Object> params = WebUtils.getParametersStartingWith(request, "search_");
+		
+		//保证在分页时可以携带查询条件. 
+		//1.查询条件的 params 转为查询的字符串
+		String queryString = PageUtils.encodeParamsToQueryString(params);
+		//2.查询条件的字符串放入到 request 中
+		map.put("queryString", queryString);
+		
+		Page page=planservice.getPage(pageNoStr,params);
+		map.put("page", page);
+		return "plan/list";
+	}
+	
+	@RequestMapping(value="/make/{id}",method=RequestMethod.GET)
+	public String make(@PathVariable("id") String id,Map<String,Object> map){
+		//回显计划用户的信息
+		SalesChance chance=planservice.getBeanById(id);
+		map.put("chance", chance);
+		return "plan/make";
+	}
+	
+	@RequestMapping(value="/execution",method=RequestMethod.GET)
+	public String execution(){
+		return "";
+	}
+	
+	@RequestMapping(value="/finish",method=RequestMethod.GET)
+	public String finish(){
+		return "";
+	}
+}

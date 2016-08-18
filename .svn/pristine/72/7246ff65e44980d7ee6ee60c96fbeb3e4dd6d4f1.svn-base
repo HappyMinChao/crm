@@ -1,0 +1,19 @@
+package com.atguigu.crm.mappers;
+
+import java.util.List;
+
+import com.atuigu.crm.entity.Contact;
+
+/**
+ *  create by 宁华勇
+ * @author Administrator
+ *
+ */
+public interface ContactMapper {
+	
+	public void add(Contact contact);
+	public void delete(Integer id);
+	public void update(Contact contact);
+	public Contact getEntityById(Integer id);
+	public List<Contact> getAll();
+}

@@ -1,0 +1,173 @@
+10. 完成带查询条件的分页.
+1). 在 Mapper 层需要考虑查询条件是否传入 ？ 因为查询条件传入和没有传入和传入几个的 SQL 是不同的. 
+需要使用 if 来判断条件是否传入. 所以使用 mapper.xml 文件会更加的便利. 
+
+2). 多个参数如何传入呢 ? 
+①. 多个参数, 每个参数都使用 @Param 注解来标识. 若使用 @Param 注解来标识参数, 最好是参数的个数小于等于 2 个. 
+methodName(@Param("title") String title, @Param("contact") String contact, @Param("custName") String custName)
+②. 传入一个 bean 的对象. bean 的属性名可以在 mybatis 的 SQL 中使用. 
+methodName(SalesChance chance)
+③. 传入一个 Map 类型的对象. Map 中的 key 可以在 SQL 中使用. 
+methodName(Map<String, Object> params)
+
+3). Service 层应该做什么呢 ? 
+①. 接受 Handler 传入的参数. Map<String, Object> params
+{"custName":"a","title":"b","contact":"c","createDate":"1990-12-12"}
+②. 把 Handler 层传入的参数转为 Mapper 可以使用的 Map 类型的对象
+例如：是 LIKE 比较的需要在值的前后添加 %, 日期类型比较的，需要把值转为 Date 类型. 
+{"custName":"%a%","title":"%b%","contact":"%c%","createDate":Date("1990-12-12")}
+
+更高的要求: 编写一个工具方法，可以直接把 Handler 传入的 Map 转为 mybatis 可以使用的 Map! Service 层一调用方法就 OK. 
+分析. 
+	> 若是 LIKE 的比较方式, 则需要把值的前后添加 %
+	> 若值为 Date 类型, 则需要把值由 String 类型转为 Date 类型
+	
+	> 所以. 必须知道是否为 LIKE 的比较方式. 还必须知道目标属性的类型. 所以对传入的请求参数的名字进行加强，其不止包含
+	参数名，还需要包含比较方式，和目标属性的类型. 
+	<input type="text" name="title" />
+	<input type="text" name="search_title" />
+	<input type="text" name="search_LIKES_title" />
+	
+	<input type="text" name="search_EQD_createDate" />
+	
+	> 同时需要定义两个枚举类，来约定由哪些比较类型和目标属性的类型
+	
+	enum MatchType{
+		LIKE, GT, LT, GE, LE, EQ;
+	}
+	
+	enum PropertyType{
+		I(Integer.class), D(Date.class), L(Long.class), S(String.class), F(Float.class);
+		
+		private Class propertyType;
+		
+		public class getPropertyType(){
+			return propertyType;
+		}
+		
+		private PropertyType(Class propertyType){
+			this.propertyType = propertyType;
+		}
+	}
+	
+	> 在 Handler 中获取的 Map 的样子如下：
+	{"LIKES_custName":"a","LIKES_title":"b","LIKES_contact":"c","EQD_createDate":"1990-12-12"}
+	
+	> 转: 根据参数值包含的信息来完成转换。
+		>> 把请求参数的名字、请求参数的值、比较方式、目标属性的类型封装为一个类。 
+		class PropertyFilter{
+			private String propretyName;
+			private Object propertyVal;
+			private MatchType matchType;
+			private Class propertyType;
+			
+			//...
+		}
+		>> 在 PropertyFilter 中定义两个方法：
+			//把请求参数的 Map 转为 PropertyFilter 的集合
+			List<PropertyType> parseRequestParmasToFilters(Map<String, Object> params)
+			
+			//把 PropertyFilter 的集合转为 mybatis 可用的 Map 类型的对象
+			Map<String, Object> parseFiltersToMybatisParams(List<PropertyFilter> filters);
+	
+	> mybatis 可以使用的类型
+	{"custName":"%a%","title":"%b%","contact":"%c%","createDate":Date("1990-12-12")}
+
+③. 调用 Mapper 方法. 
+
+4). Handler 层的挑战 ? 若有多个查询条件, 如何来获取这些查询条件对应的值 ?
+①. 一个一个的使用 @RequestParam 注解来进行映射. 但若参数多时, 很麻烦. 实际上调用 Service 方法时也比较麻烦. 
+②. 直接把所有的请求参数封装为一个对象. 但: 有些参数不是某一个 bean 的属性.
+③. 把所有的请求参数一个 Map 的方式来获取. 再以一个 Map 的方式来调用 Serivce. 
+	> 如何来通过一条语句来获取所有（查询条件）的请求参数呢 ？
+		>> request.getParameterMap . 获取了所有的请求参数, 而有一些参数是实际上用不到的. 
+		>> WebUtils#getParametersStartingWith(ServletRequest request, String prefix). 可以获取固定前缀的请求参数对应的 Map.  
+
+5). 如何在分页时，能够保存查询条件. 
+①. 过程：
+输入查询条件
+在 Handler 中可以获取到查询条件
+在 Handler 中把查询条件转为一个查询条件的字符串（例如：search_LIKES_custName=a&search_LIKES_title=b&search_LIKES_contact=c）
+把查询条件的字符串放入到 request 中，再传回页面
+点击 “翻页连接”时，再把查询条件的字符串传回来。
+
+----------------------------------------------------------------------------------------------------
+
+9. 删除销售机会：
+1). confirm 确定要删除 xx 的信息吗 ?
+2). 发送 DELETE 请求执行删除 .
+
+3). 在 Handler 方法中需要使用 @PathVariable 注解来获取 URL 上的参数. 
+
+4). 页面上使用隐藏域来存放 id 和 custName. 使用隐藏的 form 来提交 POST 请求. 
+
+8. Restful 风格的 CRUD
+1). 在 web.xml 文件中配置一个 Filter: 把 POST 请求转为 DELETE、PUT
+2). 提交请求的时候, 需要携带 name=_method 的请求参数. 
+3). 在 Handler 中应该使用 @RequestMapping 注解的 method 属性指定使用什么请求
+
+4). 注意: 使用 SpringMVC 的 form:form 标签时, 一定要注意 modelAttribute 属性!
+5). 注意: id 需要使用序列
+
+7. 显示销售机会的分页
+1). 对应实体类是 SalesChance
+2). 显示的是 status = 1 的所有的 SalesChance.
+3). 先完成不带查询条件的分页
+①. 新建一个 Page 类：封装分页信息
+②. 查询 Page 的本质是什么 ? 
+	> 前台页面传入的: pageNo, pageSize(可选)
+	> 后台需要传回的: totalElements, content, pageNo(前台传入的), totalPages(可以利用 totalElements 和 pageSize 计算得到) 
+	> 需要注意的: 先查询 totalElements, 然后由此计算 pageNo 的合法性， 然后再查询 content. 
+4). 编写 Mapper 中的方法：因为 Mapper 是接口, 所以只能在 Mapper 中编写方法, 然后再 Service 中组装 Page 对象
+long getTotalElements()
+//MySQL 分页使用 limit, Oracle 分页使用 rownum
+List<T> getContent(int firstIndex, int endIndex);
+
+5). 注意：可以在 mybatis 的配置文件中配置标准的数据列和 javabean 属性的对应关系！
+
+6). 最好查询的结果使用 id 来排序. 这意味着又要加一层子查询. 
+
+6. 使用 easyui tree
+1). 参照 jquery-easyui-1.3.5\demo\tree\animation.html 的源代码来展现 menu.jsp 页面. 
+①. 加入对应的 css 和 js 文件
+②. 定位到 tree_data1.json
+
+2). 修改 tree_data1.json, 以修改显示的菜单
+
+3). 参照已有的项目页面源代码, 构建 success.jsp 
+①. 实际上把页面都放在了 /WEB-INF/pages/home 目录下, 所以需要进行映射. 
+
+4). 为 tree 的 node 添加 click 响应函数
+①. 参照官方文档, 添加 onclick 和 attributes url 属性
+②. 添加 js 代码完成页面的转换功能. 
+
+----------------------------------------------------------------------------------------------------
+
+5. 使用 easyui tree 作为导航菜单.
+1). 把 jquery-easyui-1.3.5 文件夹直接放到 tomcat 的 webapps 目录下
+2). 为了能够在浏览器中显示文件列表, 则需要修改 tomcat 服务器的一个小配置.
+打开 tomcat/conf 目录下的 web.xml 文件, 把 listings 参数值修改为 true. 
+作用. 若在某一个目录下, 没有 index.html 或 index.jsp 页面, 则将显示该目录下的文件列表。 
+3). 在浏览器中输入 jquery-easyui-1.3.5/demo/tree/animation.html 页面, 打开 easy ui tree 的 demo. 
+4). 实际的原理:
+①. <ul class="easyui-tree" data-options="url:'tree_data1.json',method:'get',animate:true"></ul>
+实际上显示的数据来自于 tree_data1.json JSON 文件. 
+②. tree_data1.json 是可以找到的. 
+5). 目标. 利用 easyui tree 显示成目前导航菜单的样子
+	
+
+4. 导入数据表:
+
+3. 删除用户, 创建用户, 授权:
+drop user atguigu cascade;
+
+create user atguigu identified by atguigu;
+grant connect, resource, dba to atguigu;
+
+2. 搭建开发环境
+1). Spring、SpringMVC、MyBatis
+
+1. 使用的技术:
+1). Spring、SpringMVC、MyBatis
+2). Shiro、Quartz、POI、JfreeChart、StrutsMenu（easyui tree） ...
+3). Oracle、Eclipse、SVN、PowerDesigner、Rose...

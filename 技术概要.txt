@@ -1,0 +1,43 @@
+JavaSE
+*SQL
+--JDBC
+-DBUtils & Spring JDBC Template
+--Html & Css
+*javascript & jQuery & Ajax
+-JavaWEB
+	-JSP
+	-HttpServletRequest
+	-HttpServletResponse
+	-ServletContext
+	-HttpSession
+	-EL
+	-JSTL
+
+	-Servlet
+	-Filter
+	-Listener
+	-Cookie
+
+	--i18n
+	--上传下载
+	--自定义标签
+
+-Struts2
+-Hibernate
+*Spring
+
+*SpringMVC
+*myBatis
+*Linux
+*Git & GitHub
+SVN
+*Maven
+*NoSQL: Redis
+
+-----------------------------------
+
+*MySQL
+*ActivityMQ
+面试相关。
+
+Hadoop

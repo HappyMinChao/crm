@@ -1,0 +1,61 @@
+package com.atguigu.crm.test;
+
+import java.sql.SQLException;
+import java.util.List;
+
+import javax.sql.DataSource;
+
+import org.junit.Test;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+import com.atguigu.crm.mappers.CustomerServiceMapper;
+import com.atguigu.crm.services.CustomerServiceService;
+import com.atguigu.crm.services.SalesChanceService;
+import com.atuigu.crm.entity.CustomerServiceEntity;
+import com.atuigu.crm.entity.SalesChance;
+import com.atuigu.crm.orm.Page;
+
+public class ApplicationContextTest {
+
+	private ApplicationContext ctx = null;
+	private SalesChanceService salesChanceService;
+	
+	{
+		ctx = new ClassPathXmlApplicationContext("applicationContext*.xml");
+		//salesChanceService = ctx.getBean(SalesChanceService.class);
+	}
+	
+	
+	
+	@Test
+	public void testGetPage2(){
+		CustomerServiceMapper bean = ctx.getBean(CustomerServiceMapper.class);
+		List<CustomerServiceEntity> content = bean.getPageContent(1, 2);
+		for (CustomerServiceEntity customerServiceEntity : content) {
+			System.out.println(customerServiceEntity);
+		}
+	}
+	
+	
+	
+	@Test
+	public void testGetPage1(){
+		Page<SalesChance> page = salesChanceService.getPage(4);
+		
+		System.out.println(page.getTotalElements());
+		System.out.println(page.getTotalPages());
+		System.out.println(page.getContent());
+	}
+	
+	@Test
+	public void testDataSource() throws SQLException {
+		DataSource dataSource = ctx.getBean(DataSource.class);
+		System.out.println(dataSource.getConnection());
+	}
+	@Test
+	public void testFinish(){
+		salesChanceService.finish(1004);
+	}
+
+}

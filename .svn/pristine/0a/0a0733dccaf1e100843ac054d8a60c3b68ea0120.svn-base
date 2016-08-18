@@ -1,0 +1,60 @@
+package com.atguigu.crm.services;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.atguigu.crm.mappers.CustomerMapper;
+import com.atuigu.crm.entity.Customer;
+import com.atuigu.crm.orm.Page;
+
+
+@Service
+@Transactional
+public class CustomerService {
+		@Autowired
+		private CustomerMapper customerMapper;
+		
+		public void save(Customer customer){
+			customerMapper.add(customer);
+		}
+		
+		/**
+		 *@Description:获取所有客户，用于客户下拉列选中所有客户的显示
+		 *@Author:du_minchao
+		 *@Version:
+		 *@CreateDate:30 Mar 2016
+		 *@return:List<Customer>
+		 */
+		public List<Customer> getAllCustomer(){
+			return customerMapper.getAllCustomer();
+		}
+		
+		/**
+		 *@Description:在页面中显示一页的客户数据
+		 *@Author:du_minchao
+		 *@Version:
+		 *@CreateDate:30 Mar 2016
+		 *@return:Page<Customer>
+		 */
+		public Page<Customer> getPageWithoutCondition(Integer pageNo,Integer pageSize) {
+			//查询customer总数
+			int totalElements = customerMapper.getAllCustomerNum();
+			//构建page类
+			Page<Customer> page = new Page<Customer>();
+			
+			page.setPageNo(pageNo);
+			page.setPageSize(pageSize);
+			page.setTotalElements(totalElements);
+			
+			int firstIndex = (page.getPageNo() - 1) * page.getPageSize();
+			int lastIndex = firstIndex + page.getPageSize();
+			//设置page.content
+			List<Customer> content = customerMapper.getPageWithoutCondition(firstIndex, lastIndex);
+			page.setContent(content);
+			//返回page
+			return page;
+		}
+}

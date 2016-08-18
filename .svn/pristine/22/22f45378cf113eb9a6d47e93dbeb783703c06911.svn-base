@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.crm.mappers.CustomerMapper">
+	
+	<!-- 
+		describe:不带查询条件的分页查询数据
+		author: du_minchao
+	 -->
+	 <resultMap type="com.atuigu.crm.entity.Customer" id="pageWithoutCondition">
+	 	<id property="id" column="cid"/>
+	 	<result property="no" column="cno"/>
+	 	<result property="name" column="cname"/>
+	 	<result property="region" column="cregion"/>
+	 	<result property="manager.name" column="sccon"/>
+	 	<result property="level" column="ccuslevel"/>
+	 	<result property="state" column="cstate"/>
+	 </resultMap>
+	<select id="getPageWithoutCondition" resultMap="pageWithoutCondition">
+		select cid, cno,cname,cregion,sccon,ccuslevel,cstate
+		from (
+				select rownum rn,
+						c.id cid,
+        				c.no cno,
+        				c.name cname,
+        				c.region cregion,
+        				c.customer_level ccuslevel,
+        				c.state cstate,
+        				sc.contact sccon
+				from customers c
+        		left outer join sales_chances sc
+        		on c.manager_id = sc.id
+			 )
+		<![CDATA[
+		where rn >=#{firstIndex} and rn<#{lastIndex}
+		]]>
+	</select>
+	<!-- 
+		describe:查询数据库中所有的customer的数量
+		author: du_minchao
+	 -->
+	<select id="getAllCustomerNum" resultType="int">
+		select count(*) from customers
+	</select>
+	
+	<!-- 
+		describe: 获取所有客户
+		author: du_minchao
+	 -->
+	<select id="getAllCustomer" resultType="com.atuigu.crm.entity.Customer">
+		select * from customers
+	</select>
+	
+	<insert id="add" parameterType="com.atuigu.crm.entity.Customer">
+		<selectKey resultType="long" order="BEFORE" keyProperty="id">
+			select crm_seq.nextval as id from dual
+		</selectKey>
+		insert into customers(id,name,no,state)
+		values(#{id},#{name},#{no},#{state})
+	</insert>
+	
+	
+</mapper>

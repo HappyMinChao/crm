@@ -1,0 +1,9 @@
+package com.atguigu.crm.mappers;
+
+import com.atuigu.crm.entity.CustomerServiceEntity;
+
+public interface CustomerServiceMapper {
+
+	public abstract void saveCustomerService(CustomerServiceEntity customerServiceEntity);
+
+}

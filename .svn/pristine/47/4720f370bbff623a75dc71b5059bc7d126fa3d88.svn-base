@@ -1,0 +1,103 @@
+package com.atguigu.crm.services;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.util.WebUtils;
+
+import com.atguigu.crm.mappers.CustomerServiceMapper;
+import com.atguigu.crm.utils.PageUtils;
+import com.atuigu.crm.entity.CustomerServiceEntity;
+import com.atuigu.crm.entity.SalesChance;
+import com.atuigu.crm.entity.User;
+import com.atuigu.crm.orm.Page;
+import com.atuigu.crm.orm.PropertyFilter;
+
+/**
+ * @Description: 客户服务类的service方法
+ * @Author:du_minchao
+ * @CreateDate:19:56:00
+ */
+
+@Service
+@Transactional
+public class CustomerServiceService {
+	
+	@Autowired
+	private CustomerServiceMapper customerServiceMapper;
+	
+	public void saveCustomerService(CustomerServiceEntity customerServiceEntity){
+		customerServiceMapper.saveCustomerService(customerServiceEntity);
+	}
+
+	public Page<CustomerServiceEntity> listWithPage(int pageNo,
+			int pageSize) {
+		
+		//获取totalElements content
+		int totalElements = customerServiceMapper.getTotalElementCount();
+		Page<CustomerServiceEntity>  page = new Page<CustomerServiceEntity>();
+		page.setPageNo(pageNo);
+		page.setPageSize(pageSize);
+		page.setTotalElements(totalElements);
+		
+		int firstIndex = (page.getPageNo()-1) * page.getPageSize();
+		int lastIndex = firstIndex + page.getPageSize();
+		//查询出page.content
+		List<CustomerServiceEntity> pageContent = customerServiceMapper.getPageContent(firstIndex, lastIndex);
+		page.setContent(pageContent);
+		return page;
+	}
+
+	public void updateAllotTo(Integer id,Integer allotTo_id) {
+		customerServiceMapper.updateAllotTo(id, (long)allotTo_id);
+	}
+
+	public Page<CustomerServiceEntity> listPageWithCondition(
+			Map<String, Object> parameters, int pageNo, int pageSize) {
+
+		Page<CustomerServiceEntity> page = new Page<CustomerServiceEntity>();
+		page.setPageNo(pageNo);
+		page.setPageSize(pageSize);
+		
+		/*	serviceTitle=%asdF%, 
+		 *  customer.name=ASDF,
+		 *  serviceType=%ASDF%,
+		 *  createDateEnd=2016-03-31, 
+		 *  createDateStart=2016-03-30
+		 */
+		//1. 把请求参数转为 mybatis 可以使用的请求参数
+		Map<String , Object> mybatisParams = PropertyFilter.parseRequestParams2MybatisParams(parameters);
+		
+		/*
+		 *  serviceType  serviceTitle  customerName  createDate  createDate
+		 *  需要把customer.name进行转换
+		 */
+		Object value = mybatisParams.get("customer.name");
+		mybatisParams.put("customerName", value);
+		
+		
+		//2. 查询 totalElements
+		int totalElements = (int) customerServiceMapper.getTotalElementsWithCondition(mybatisParams);
+		page.setTotalElements(totalElements);
+		
+		//3. 确定查询 content 需要的 firstIndex 和 endIndex
+		int firstIndex = (page.getPageNo() - 1) * page.getPageSize() + 1;
+		int lastIndex = firstIndex + page.getPageSize();
+		
+		//4. 把 firstIndex 和 endIndex 加入到 mybatisParams 中
+		mybatisParams.put("firstIndex", firstIndex);
+		mybatisParams.put("lastIndex", lastIndex);
+		
+		//5. 调方法查询 content
+		List<CustomerServiceEntity> content = customerServiceMapper.
+								getContentWithCondition(mybatisParams);
+		page.setContent(content);
+		
+		
+		return page;
+	}
+
+}

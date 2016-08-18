@@ -1,0 +1,16 @@
+package com.atguigu.crm.mappers;
+
+import java.util.List;
+import java.util.Map;
+
+import com.atuigu.crm.entity.CustomerDrain;
+
+
+public interface CustomerDrainMapper {
+	
+	public abstract int getTotalNumCondition(Map<String, Object> mybatisParams);
+	public abstract List<CustomerDrain> getContentCondition(Map<String, Object> mybatisParams);
+	public abstract CustomerDrain getElementById(Long id);
+	public abstract void updateDelay(CustomerDrain customerDrain);
+	
+}

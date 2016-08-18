@@ -1,0 +1,27 @@
+package com.atguigu.crm.services;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.atguigu.crm.mappers.CustomerServiceMapper;
+import com.atuigu.crm.entity.CustomerServiceEntity;
+
+/**
+ * @Description: 客户服务类的service方法
+ * @Author:du_minchao
+ * @CreateDate:19:56:00
+ */
+
+@Service
+@Transactional
+public class CustomerServiceService {
+	
+	@Autowired
+	private CustomerServiceMapper customerServiceMapper;
+	
+	public void saveCustomerService(CustomerServiceEntity customerServiceEntity){
+		customerServiceMapper.saveCustomerService(customerServiceEntity);
+	}
+
+}

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<!-- 使用spring整合Quartz -->
+	<bean id="myJob" class="com.atguigu.crm.quartz.MyJob"/>
+	<!-- 1.配置JobDetail -->
+	<bean id="jobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<!-- 在触发时调用的类 -->
+		<property name="targetObject" ref="myJob"></property>
+		<!-- 在触发时调用的目标类中的目标方法 -->
+		<property name="targetMethod" value="doMyJob"></property>
+	</bean>
+	
+	<!-- 配置被触发的时间 trigger -->
+	<bean id="trigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<!-- 指定触发是的工作细节 -->
+		<property name="jobDetail" ref="jobDetail"></property>
+		<!-- 指定触发时间表达式 -->
+		<property name="cronExpression" value="0/10 3 10 4 4 ?"></property>	
+	</bean>
+	
+	<!-- 配置schedule(安排计划) -->
+	<bean id="scheduler" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+	
+		<!-- 指定关联的Trigger -->
+		<property name="triggers">
+			<array>
+				<ref bean="trigger"/>
+			</array>
+		</property>
+		
+		<!-- 
+			配置基本属性 在quartz-2.2.1.jar下的第一个包中有个quartz.properties
+			里面是一些可配置的属性
+		-->
+		<property name="quartzProperties">
+			<props>
+				<prop key="org.quartz.threadPool.threadCount">5</prop>
+			</props>
+		</property>
+		<!-- 指定IOC容器启动后多长时间内加载 -->
+		<property name="startupDelay" value="10"></property>
+	</bean>
+	
+	
+
+</beans>
